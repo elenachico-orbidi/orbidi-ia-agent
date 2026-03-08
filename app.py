@@ -272,7 +272,7 @@ st.markdown("""
 }
 [data-testid="stChatInput"] textarea {
     border-radius: 14px !important; border: 1.5px solid #e8e8f0 !important;
-    background: #fafafa !important; font-size: 15px !important;
+    background: #fafafa !important; font-size: 15px !important; color: #1a1a2e !important;
 }
 [data-testid="stChatInput"] textarea:focus {
     border-color: #6C3CE1 !important;
