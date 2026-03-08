@@ -267,7 +267,7 @@ st.markdown("""
     border-radius: 20px; margin-left: 8px; vertical-align: middle;
 }
 [data-testid="stChatMessage"] {
-    background: #fafafa; border-radius: 14px;
+    background: #fafafa; border-radius: 14px; color: #1a1a2e !important;
     padding: 4px 8px; margin-bottom: 6px; border: 1px solid #f0f0f0;
 }
 [data-testid="stChatInput"] textarea {
