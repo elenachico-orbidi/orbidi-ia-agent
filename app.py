@@ -266,7 +266,11 @@ st.markdown("""
     font-size: 11px; font-weight: 600; padding: 3px 10px;
     border-radius: 20px; margin-left: 8px; vertical-align: middle;
 }
-[data-testid="stChatMessage"] {
+[data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span, [data-testid="stChatMessage"] div:not([class]) {
+        color: #1a1a2e !important;
+    }
+    [data-testid="stChatMessage"] * { color: #1a1a2e !important; }
+    [data-testid="stChatMessage"] {
     background: #fafafa; border-radius: 14px; color: #1a1a2e !important;
     padding: 4px 8px; margin-bottom: 6px; border: 1px solid #f0f0f0;
 }
