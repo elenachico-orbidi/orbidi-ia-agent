@@ -71,45 +71,74 @@ def _split_markdown_into_procedures(text: str, source_file: str) -> list[dict]:
     """
     Divide un archivo markdown en procedimientos individuales.
 
-    Estrategia:
-    - Si tiene múltiples headers # (h1), divide por h1
-    - Si solo tiene ## (h2), divide por h2
-    - Si no tiene headers, trata todo el archivo como un procedimiento
+    Estrategia (prioriza la división más granular):
+    1. Si tiene headers ## (h2), SIEMPRE divide por h2 (típico de Notion)
+    2. Si no tiene h2 pero sí múltiples h1, divide por h1
+    3. Si no tiene headers claros, trata como un solo procedimiento
     """
     procedures = []
 
-    # Contar headers para decidir cómo dividir
-    h1_splits = re.split(r'\n(?=# [^#])', text)
-    h2_count = len(re.findall(r'\n## [^#]', text))
+    # Contar headers reales (no splits)
+    h1_count = len(re.findall(r'^# [^#]', text, re.MULTILINE))
+    h2_count = len(re.findall(r'^## [^#]', text, re.MULTILINE))
+    h3_count = len(re.findall(r'^### [^#]', text, re.MULTILINE))
 
-    # Si hay múltiples secciones h1, dividir por h1
-    if len(h1_splits) > 1:
-        for section in h1_splits:
-            section = section.strip()
-            if not section or len(section) < 20:
-                continue
-            title = _extract_title_from_content(section)
-            if not title:
-                first_line = section.splitlines()[0][:80] if section.splitlines() else source_file
-                title = first_line
-            procedures.append({'title': title, 'content': section, 'source': source_file})
-
-    # Si hay muchas secciones h2 (típico de Notion database exports), dividir por h2
-    elif h2_count > 3:
+    # PRIORIDAD 1: Si hay secciones ## (h2), dividir por h2
+    # Esto es lo típico de Notion: un título # seguido de muchos ##
+    if h2_count >= 2:
         h2_splits = re.split(r'\n(?=## [^#])', text)
+        # El primer bloque puede ser un título/intro general (# Guía...)
+        # Lo guardamos como contexto si es corto, o como procedimiento si tiene contenido
         for section in h2_splits:
             section = section.strip()
             if not section or len(section) < 20:
                 continue
-            # Extraer título h2
             first_line = section.splitlines()[0].strip()
+            # Si es un header h1 solo (intro/título), incluir como contexto general
+            if first_line.startswith('# ') and not first_line.startswith('## '):
+                # Es la intro del documento, puede tener info útil
+                title = first_line[2:].strip()
+                # Solo incluir si tiene contenido más allá del título
+                content_lines = [l for l in section.splitlines()[1:] if l.strip()]
+                if len(content_lines) > 2:
+                    procedures.append({'title': f"INTRO: {title}", 'content': section, 'source': source_file})
+                continue
+            # Extraer título h2
             if first_line.startswith('## '):
                 title = first_line[3:].strip()
             else:
                 title = first_line[:80]
             procedures.append({'title': title, 'content': section, 'source': source_file})
 
-    # Archivo sin headers claros o un solo procedimiento grande
+    # PRIORIDAD 2: Si hay muchas secciones ### pero pocas ##, dividir por h3
+    elif h3_count >= 2:
+        h3_splits = re.split(r'\n(?=### [^#])', text)
+        for section in h3_splits:
+            section = section.strip()
+            if not section or len(section) < 20:
+                continue
+            first_line = section.splitlines()[0].strip()
+            if first_line.startswith('### '):
+                title = first_line[4:].strip()
+            elif first_line.startswith('# '):
+                title = first_line.lstrip('# ').strip()
+            else:
+                title = first_line[:80]
+            procedures.append({'title': title, 'content': section, 'source': source_file})
+
+    # PRIORIDAD 3: Si hay múltiples h1, dividir por h1
+    elif h1_count >= 2:
+        h1_splits = re.split(r'\n(?=# [^#])', text)
+        for section in h1_splits:
+            section = section.strip()
+            if not section or len(section) < 20:
+                continue
+            title = _extract_title_from_content(section)
+            if not title:
+                title = section.splitlines()[0][:80] if section.splitlines() else source_file
+            procedures.append({'title': title, 'content': section, 'source': source_file})
+
+    # PRIORIDAD 4: Sin headers claros - archivo completo como un procedimiento
     else:
         title = _extract_title_from_content(text) or _clean_notion_title(source_file)
         if title and len(text.strip()) > 20:
@@ -466,7 +495,7 @@ if prompt := st.chat_input("Escribe tu pregunta sobre procesos CS..."):
         st.markdown(prompt)
 
     # RAG: recuperar procedimientos relevantes
-    retrieved = retrieve(prompt, kb, top_k=6)
+    retrieved = retrieve(prompt, kb, top_k=8)
     system_prompt = build_system_prompt(retrieved)
 
     with st.chat_message("assistant"):
@@ -486,5 +515,11 @@ if prompt := st.chat_input("Escribe tu pregunta sobre procesos CS..."):
             full_response += text
             placeholder.markdown(full_response + "▌")
         placeholder.markdown(full_response)
+
+    # Mostrar qué procedimientos se usaron para la respuesta
+    if retrieved:
+        with st.expander(f"📚 Procedimientos consultados ({len(retrieved)})", expanded=False):
+            for r in retrieved:
+                st.markdown(f"- **{r['title']}** _{r.get('source', '')}_")
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
