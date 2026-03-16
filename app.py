@@ -1,11 +1,16 @@
 """
 Asistente IA de Customer Success - Orbidi
-Interfaz web tipo ChatGPT con Streamlit
+Interfaz web tipo ChatGPT con Streamlit + RAG sobre Notion
 """
+import re
+import unicodedata
 import streamlit as st
 from groq import Groq
 
-CS_GUIDE = """
+# ─────────────────────────────────────────────
+# GUÍA ESTÁTICA (fallback si Notion no está configurado)
+# ─────────────────────────────────────────────
+CS_GUIDE_FALLBACK = """
 PROCESOS
 Cómo y a quién escalar tickets/consultas
 Desde el área de CS, tenemos diferentes vías para reportar consultas, incidencias, o tickets a otras áreas:
@@ -212,24 +217,188 @@ Tareas CS colas: Petición baja CS (plazo 1 día), Contacto cliente (máx 48h), 
 Notificaciones HubSpot: Activar menciones directas, recordatorios tareas, cambios estado tickets. Desactivar el resto.
 """
 
-SYSTEM_PROMPT = f"""Eres el Asistente IA del equipo de Customer Success de Orbidi, especializado en el programa Kit Digital.
+# ─────────────────────────────────────────────
+# SISTEMA RAG: BÚSQUEDA SEMÁNTICA CON BM25
+# ─────────────────────────────────────────────
+
+SPANISH_STOPWORDS = {
+    'de', 'la', 'el', 'en', 'y', 'a', 'los', 'las', 'un', 'una', 'con',
+    'por', 'para', 'del', 'al', 'es', 'se', 'que', 'no', 'si', 'su', 'lo',
+    'le', 'o', 'e', 'u', 'hay', 'son', 'ser', 'ha', 'han', 'tiene', 'tienen',
+    'puede', 'pueden', 'este', 'esta', 'estos', 'estas', 'como', 'cuando',
+    'donde', 'quien', 'cual', 'cuales', 'más', 'mas', 'pero', 'sino', 'porque',
+    'aunque', 'desde', 'hasta', 'entre', 'sobre', 'bajo', 'ante', 'tras'
+}
+
+
+def _normalize(text: str) -> list[str]:
+    """Convierte texto en tokens normalizados para BM25."""
+    text = text.lower()
+    # Eliminar acentos
+    text = ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
+    # Solo alfanuméricos
+    text = re.sub(r'[^\w\s]', ' ', text)
+    tokens = [t for t in text.split() if t not in SPANISH_STOPWORDS and len(t) > 1]
+    return tokens
+
+
+def _block_to_text(block: dict) -> str:
+    """Convierte un bloque de Notion a texto plano."""
+    block_type = block.get('type', '')
+    block_data = block.get(block_type, {})
+    rich_text = block_data.get('rich_text', [])
+    text = ''.join(t.get('plain_text', '') for t in rich_text)
+
+    prefixes = {
+        'heading_1': '# ', 'heading_2': '## ', 'heading_3': '### ',
+        'bulleted_list_item': '- ', 'numbered_list_item': '• ',
+        'to_do': '[ ] ', 'quote': '> ',
+        'callout': '⚠️ ',
+    }
+    return f"{prefixes.get(block_type, '')}{text}" if text else ''
+
+
+def _fetch_page_content(notion_client, page_id: str) -> str:
+    """Obtiene todo el texto de una página Notion (incluye sub-bloques)."""
+    parts = []
+    try:
+        cursor = None
+        while True:
+            kwargs = {'block_id': page_id, 'page_size': 100}
+            if cursor:
+                kwargs['start_cursor'] = cursor
+            response = notion_client.blocks.children.list(**kwargs)
+            for block in response.get('results', []):
+                line = _block_to_text(block)
+                if line:
+                    parts.append(line)
+                # Sub-bloques (listas anidadas, etc.)
+                if block.get('has_children'):
+                    parts.append(_fetch_page_content(notion_client, block['id']))
+            if not response.get('has_more'):
+                break
+            cursor = response.get('next_cursor')
+    except Exception:
+        pass
+    return '\n'.join(parts)
+
+
+def _extract_title(page: dict) -> str:
+    """Extrae el título de una página Notion."""
+    for prop in page.get('properties', {}).values():
+        if prop.get('type') == 'title':
+            texts = prop.get('title', [])
+            return ''.join(t.get('plain_text', '') for t in texts).strip()
+    return ''
+
+
+@st.cache_resource(show_spinner="Cargando procedimientos desde Notion…")
+def load_knowledge_base():
+    """
+    Carga todos los procedimientos de la base de datos Notion y construye
+    el índice BM25 para búsqueda rápida.
+    Devuelve (procedures_list, bm25_index) o None si Notion no está configurado.
+    """
+    try:
+        from notion_client import Client as NotionClient
+        from rank_bm25 import BM25Okapi
+    except ImportError:
+        return None
+
+    try:
+        token = st.secrets["NOTION_TOKEN"]
+        database_id = st.secrets["NOTION_DATABASE_ID"]
+    except (KeyError, Exception):
+        return None
+
+    try:
+        notion = NotionClient(auth=token)
+        pages = []
+        cursor = None
+        while True:
+            kwargs = {'database_id': database_id, 'page_size': 100}
+            if cursor:
+                kwargs['start_cursor'] = cursor
+            response = notion.databases.query(**kwargs)
+            pages.extend(response.get('results', []))
+            if not response.get('has_more'):
+                break
+            cursor = response.get('next_cursor')
+
+        procedures = []
+        for page in pages:
+            title = _extract_title(page)
+            if not title:
+                continue
+            content = _fetch_page_content(notion, page['id'])
+            procedures.append({
+                'title': title,
+                'content': content,
+                'text': f"## {title}\n{content}",
+                'url': page.get('url', ''),
+            })
+
+        if not procedures:
+            return None
+
+        tokenized = [_normalize(f"{p['title']} {p['content']}") for p in procedures]
+        bm25 = BM25Okapi(tokenized)
+        return procedures, bm25
+
+    except Exception as e:
+        st.warning(f"No se pudo conectar con Notion: {e}. Usando guía local.")
+        return None
+
+
+def retrieve(query: str, kb, top_k: int = 6) -> list[dict]:
+    """Recupera los procedimientos más relevantes para la consulta."""
+    if kb is None:
+        return []
+    procedures, bm25 = kb
+    tokens = _normalize(query)
+    if not tokens:
+        return []
+    scores = bm25.get_scores(tokens)
+    ranked = sorted(range(len(scores)), key=lambda i: -scores[i])
+    return [procedures[i] for i in ranked[:top_k] if scores[i] > 0.0]
+
+
+def build_system_prompt(retrieved: list[dict]) -> str:
+    """Construye el system prompt con solo los procedimientos relevantes."""
+    if retrieved:
+        context = "\n\n---\n\n".join(p['text'] for p in retrieved)
+        source_note = f"(Mostrando {len(retrieved)} procedimiento(s) relevantes de la base de conocimiento)"
+    else:
+        context = CS_GUIDE_FALLBACK
+        source_note = "(Usando guía local de referencia)"
+
+    return f"""Eres el Asistente IA del equipo de Customer Success de Orbidi, especializado en el programa Kit Digital.
 Tu función es ayudar a los agentes de CS a:
 - Conocer el procedimiento exacto para cualquier situación
 - Saber a qué equipo escalar un ticket y cómo hacerlo
 - Entender los estados y plazos del Kit Digital
 - Resolver dudas sobre ordenadores, memorias, subvenciones, facturas y herramientas internas
+
 REGLAS DE RESPUESTA:
 1. Sé concreto y directo. Da pasos numerados cuando sea un proceso.
 2. Si la pregunta implica escalar un ticket, indica exactamente: A QUIÉN, CÓMO y QUÉ incluir.
-3. Si hay plazos importantes, resáltalos claramente.
-4. Si la situación no está cubierta en la guía, dilo y sugiere consultar al TL.
-5. Usa el contenido de la guía como única fuente de verdad.
+3. Si hay plazos importantes, resáltalos claramente con ⚠️.
+4. Si la información no está en los procedimientos proporcionados, dilo claramente y sugiere consultar al TL.
+5. Usa ÚNICAMENTE el contenido de los procedimientos de abajo como fuente de verdad. No inventes información.
 6. Responde siempre en español.
-Guía completa de procesos CS:
+7. Cita el nombre del procedimiento cuando sea útil para que el agente lo localice.
+
+{source_note}
+
+PROCEDIMIENTOS RELEVANTES:
 ---
-{CS_GUIDE}
+{context}
 ---
-Responde basándote exclusivamente en esta guía."""
+Responde basándote EXCLUSIVAMENTE en los procedimientos anteriores."""
+
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN DE PÁGINA
@@ -266,6 +435,11 @@ st.markdown("""
     font-size: 11px; font-weight: 600; padding: 3px 10px;
     border-radius: 20px; margin-left: 8px; vertical-align: middle;
 }
+.notion-badge {
+    display: inline-block; background: #e8f5e9; color: #2e7d32;
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; margin-left: 4px; vertical-align: middle;
+}
 [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span, [data-testid="stChatMessage"] div:not([class]) {
         color: #1a1a2e !important;
     }
@@ -295,21 +469,28 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+# ─────────────────────────────────────────────
+# INICIALIZACIÓN
+# ─────────────────────────────────────────────
+@st.cache_resource
+def get_groq_client():
+    return Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+groq_client = get_groq_client()
+kb = load_knowledge_base()
+using_notion = kb is not None
+
+# Header
+notion_badge = '<span class="notion-badge">✓ Notion conectado</span>' if using_notion else ''
+st.markdown(f"""
 <div class="orbidi-header">
     <div class="orbidi-logo">⚡</div>
     <div>
-        <p class="orbidi-title">Orbidi IA Agent <span class="badge">CS · Kit Digital</span></p>
+        <p class="orbidi-title">Orbidi IA Agent <span class="badge">CS · Kit Digital</span>{notion_badge}</p>
         <p class="orbidi-subtitle">Tu asistente de procesos internos · Customer Success</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-@st.cache_resource
-def get_client():
-    return Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-client = get_client()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -322,11 +503,13 @@ with col2:
             st.rerun()
 
 if not st.session_state.messages:
-    st.markdown("""
+    proc_count = f"{len(kb[0])} procedimientos" if using_notion else "guía local"
+    st.markdown(f"""
     <div style="text-align:center; padding: 48px 0 32px 0;">
         <div style="font-size: 40px; margin-bottom: 12px;">💬</div>
         <p style="font-size:16px; font-weight:600; color:#555; margin:0;">¿En qué puedo ayudarte hoy?</p>
         <p style="font-size:13px; color:#aaa; margin-top:6px;">Pregúntame sobre tickets, plazos, memorias, ordenadores o cualquier proceso CS.</p>
+        <p style="font-size:11px; color:#bbb; margin-top:4px;">Base de conocimiento: {proc_count}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -334,19 +517,27 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
+# ─────────────────────────────────────────────
+# BUCLE DE CHAT CON RAG
+# ─────────────────────────────────────────────
 if prompt := st.chat_input("Escribe tu pregunta sobre procesos CS..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+
+    # RAG: recuperar procedimientos relevantes para esta consulta
+    retrieved = retrieve(prompt, kb, top_k=6)
+    system_prompt = build_system_prompt(retrieved)
+
     with st.chat_message("assistant"):
         placeholder = st.empty()
         full_response = ""
-        stream = client.chat.completions.create(
+        stream = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             max_tokens=2048,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                *st.session_state.messages
+                {"role": "system", "content": system_prompt},
+                *[m for m in st.session_state.messages if m["role"] != "system"],
             ],
             stream=True,
         )
@@ -355,5 +546,5 @@ if prompt := st.chat_input("Escribe tu pregunta sobre procesos CS..."):
             full_response += text
             placeholder.markdown(full_response + "▌")
         placeholder.markdown(full_response)
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
 
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
