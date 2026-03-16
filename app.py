@@ -271,7 +271,7 @@ Responde basándote EXCLUSIVAMENTE en los procedimientos anteriores. Si la pregu
 st.set_page_config(
     page_title="Orbidi IA Agent",
     page_icon="⚡",
-    layout="centered",
+    layout="wide",
 )
 st.markdown("""
 <style>
@@ -345,6 +345,80 @@ groq_client = get_groq_client()
 kb = load_knowledge_base()
 using_kb = kb is not None
 proc_count = len(kb[0]) if using_kb else 0
+all_procedures = kb[0] if using_kb else []
+
+# ─────────────────────────────────────────────
+# SIDEBAR: LISTADO COMPLETO DE PROCEDIMIENTOS
+# ─────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"""
+    <div style="padding: 8px 0 16px 0; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+        <p style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0;">
+            Base de Conocimiento
+        </p>
+        <p style="font-size: 13px; color: #888; margin: 4px 0 0 0;">
+            {proc_count} procedimientos cargados
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if all_procedures:
+        # Buscador de procedimientos
+        search_filter = st.text_input(
+            "Buscar procedimiento",
+            placeholder="Escribe para filtrar...",
+            label_visibility="collapsed",
+        )
+
+        # Agrupar por source (archivo de origen)
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for i, proc in enumerate(all_procedures):
+            groups[proc.get('source', 'Sin categoría')].append((i, proc))
+
+        # Filtrar si hay búsqueda
+        filter_lower = search_filter.lower().strip() if search_filter else ""
+
+        shown = 0
+        for source, procs in sorted(groups.items()):
+            filtered = [
+                (i, p) for i, p in procs
+                if not filter_lower or filter_lower in p['title'].lower() or filter_lower in p.get('content', '').lower()
+            ]
+            if not filtered:
+                continue
+
+            with st.expander(f"📁 {source} ({len(filtered)})", expanded=bool(filter_lower)):
+                for idx, proc in filtered:
+                    title = proc['title'][:70]
+                    preview = proc.get('content', '')[:100].replace('\n', ' ')
+                    if st.button(f"📄 {title}", key=f"proc_{idx}", use_container_width=True):
+                        st.session_state['selected_proc'] = idx
+                    shown += 1
+
+        if filter_lower and shown == 0:
+            st.info("No se encontraron procedimientos con ese filtro.")
+
+        # Mostrar procedimiento seleccionado
+        if 'selected_proc' in st.session_state:
+            sel = st.session_state['selected_proc']
+            if 0 <= sel < len(all_procedures):
+                st.markdown("---")
+                proc = all_procedures[sel]
+                st.markdown(f"### {proc['title']}")
+                st.markdown(proc.get('content', ''), unsafe_allow_html=False)
+    else:
+        st.warning("No se encontraron archivos .md en `notion_export/`")
+        st.markdown("""
+        **Para conectar tu guía de Notion:**
+        1. Exporta desde Notion como Markdown
+        2. Coloca los archivos `.md` en la carpeta `notion_export/`
+        3. Reinicia la app
+        """)
+
+# ─────────────────────────────────────────────
+# CONTENIDO PRINCIPAL
+# ─────────────────────────────────────────────
 
 # Header
 kb_badge = f'<span class="notion-badge">✓ {proc_count} procedimientos</span>' if using_kb else ''
