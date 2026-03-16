@@ -87,27 +87,36 @@ def _split_markdown_into_procedures(text: str, source_file: str) -> list[dict]:
     # Esto es lo típico de Notion: un título # seguido de muchos ##
     if h2_count >= 2:
         h2_splits = re.split(r'\n(?=## [^#])', text)
-        # El primer bloque puede ser un título/intro general (# Guía...)
-        # Lo guardamos como contexto si es corto, o como procedimiento si tiene contenido
         for section in h2_splits:
             section = section.strip()
             if not section or len(section) < 20:
                 continue
+
             first_line = section.splitlines()[0].strip()
-            # Si es un header h1 solo (intro/título), incluir como contexto general
+
+            # Si es un header h1 solo (intro/título del documento)
             if first_line.startswith('# ') and not first_line.startswith('## '):
-                # Es la intro del documento, puede tener info útil
                 title = first_line[2:].strip()
-                # Solo incluir si tiene contenido más allá del título
                 content_lines = [l for l in section.splitlines()[1:] if l.strip()]
                 if len(content_lines) > 2:
                     procedures.append({'title': f"INTRO: {title}", 'content': section, 'source': source_file})
                 continue
+
             # Extraer título h2
             if first_line.startswith('## '):
                 title = first_line[3:].strip()
+                # Limpiar markdown del título (negritas, emojis de numeración)
+                title = re.sub(r'\*\*([^*]+)\*\*', r'\1', title).strip()
             else:
                 title = first_line[:80]
+
+            # Filtrar secciones que son solo links a otros archivos (sin contenido real)
+            content_lines = [l for l in section.splitlines()[1:] if l.strip()]
+            # Si solo tiene links a otros .md y nada más, saltar
+            real_content = [l for l in content_lines if not re.match(r'^\[.*\]\(.*\.md\)$', l.strip())]
+            if len(real_content) < 2:
+                continue
+
             procedures.append({'title': title, 'content': section, 'source': source_file})
 
     # PRIORIDAD 2: Si hay muchas secciones ### pero pocas ##, dividir por h3
@@ -176,6 +185,8 @@ def _read_markdown_files(data_dir: str) -> list[dict]:
 
             # Limpiar caracteres problemáticos
             text = ''.join(c for c in text if ord(c) < 0xD800 or ord(c) > 0xDFFF)
+            # Eliminar referencias a imágenes locales (no aportan al texto)
+            text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
             text = text.strip()
 
             if not text or len(text) < 30:
@@ -188,17 +199,38 @@ def _read_markdown_files(data_dir: str) -> list[dict]:
     return all_procedures
 
 
+def _deduplicate(procedures: list[dict]) -> list[dict]:
+    """Elimina procedimientos duplicados basándose en el título normalizado."""
+    seen = {}
+    unique = []
+    for p in procedures:
+        # Normalizar título para comparación
+        key = re.sub(r'\s+', ' ', p['title'].lower().strip())
+        if key in seen:
+            # Mantener el que tenga más contenido
+            existing = seen[key]
+            if len(p.get('content', '')) > len(existing.get('content', '')):
+                unique[unique.index(existing)] = p
+                seen[key] = p
+        else:
+            seen[key] = p
+            unique.append(p)
+    return unique
+
+
 @st.cache_resource(show_spinner="Cargando procedimientos desde archivos Markdown…")
 def load_knowledge_base():
     """
     Carga todos los procedimientos de archivos .md en notion_export/
     y construye el índice BM25 para búsqueda rápida.
     """
-    # Buscar en notion_export/ y notion_export/data/
     procedures = _read_markdown_files(DATA_DIR)
 
     if not procedures:
         return None
+
+    # Eliminar duplicados (Notion exporta archivos repetidos en distintas carpetas)
+    procedures = _deduplicate(procedures)
 
     # Preparar textos formateados para el prompt
     for p in procedures:
