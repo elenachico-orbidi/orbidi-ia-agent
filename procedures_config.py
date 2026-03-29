@@ -1,9 +1,8 @@
 """
-Configuración RAG: 102 procedimientos de la Guía Customer Success
-Cada procedimiento tiene categoría, título y keywords para búsqueda precisa.
+Configuración RAG: procedimientos de la Guía Customer Success (359 secciones)
+Organizado en 20 categorías con keywords para búsqueda precisa en BM25.
 
-El índice BM25 usa: título + keywords + contenido de Notion.
-Así la IA detecta correctamente la intención del agente aunque use palabras distintas.
+El índice BM25 usa: título + keywords + categoría + contenido de Notion.
 """
 
 PROCEDURES_CONFIG = [
@@ -819,6 +818,633 @@ PROCEDURES_CONFIG = [
         "keywords": [
             "markup", "feedback web", "dejar comentario web",
             "revisar diseño", "comentar en web", "revisión web markup",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: REDES SOCIALES
+    # ═══════════════════════════════════════════
+    {
+        "id": "rrss_que_incluye",
+        "category": "REDES SOCIALES",
+        "title": "Redes Sociales - Qué incluye el servicio",
+        "keywords": [
+            "qué redes sociales incluye", "kit digital redes sociales",
+            "cuántas publicaciones", "publicaciones al año",
+            "qué incluye rrss", "servicio redes sociales",
+            "qué hace orbidi en redes", "social media plan",
+        ],
+    },
+    {
+        "id": "rrss_sugerir_cambios",
+        "category": "REDES SOCIALES",
+        "title": "Redes Sociales - Cambios y aprobación de contenidos",
+        "keywords": [
+            "sugerir cambios contenido", "aprobar publicaciones",
+            "cambiar contenido redes", "no me gusta el contenido",
+            "modificar publicación", "revisar contenido rrss",
+        ],
+    },
+    {
+        "id": "rrss_contraseñas",
+        "category": "REDES SOCIALES",
+        "title": "Redes Sociales - Accesos y contraseñas",
+        "keywords": [
+            "contraseña redes sociales", "acceso instagram facebook",
+            "credenciales redes", "necesitáis contraseña",
+            "dar acceso redes", "permisos redes sociales",
+        ],
+    },
+    {
+        "id": "metricool_vincular",
+        "category": "REDES SOCIALES",
+        "title": "Pasos para vincular Instagram y Facebook a Metricool",
+        "keywords": [
+            "vincular metricool", "conectar metricool", "metricool instagram",
+            "metricool facebook", "crear marca metricool", "vincular cuenta metricool",
+            "cómo vincular redes metricool", "conectar facebook metricool",
+            "conectar instagram metricool", "pasos metricool",
+        ],
+    },
+    {
+        "id": "metricool_crear_marca",
+        "category": "REDES SOCIALES",
+        "title": "Metricool - Crear una marca (paso imprescindible)",
+        "keywords": [
+            "crear marca metricool", "nueva marca metricool",
+            "primer paso metricool", "configurar metricool",
+        ],
+    },
+    {
+        "id": "metricool_conectar_facebook",
+        "category": "REDES SOCIALES",
+        "title": "Metricool - Conectar Facebook",
+        "keywords": [
+            "conectar facebook metricool", "facebook metricool",
+            "vincular facebook", "página facebook metricool",
+            "no conecta facebook", "error facebook metricool",
+        ],
+    },
+    {
+        "id": "metricool_conectar_instagram",
+        "category": "REDES SOCIALES",
+        "title": "Metricool - Conectar Instagram",
+        "keywords": [
+            "conectar instagram metricool", "instagram metricool",
+            "vincular instagram", "cuenta profesional instagram",
+            "no conecta instagram", "error instagram metricool",
+        ],
+    },
+    {
+        "id": "linkedin_admin_rrss",
+        "category": "REDES SOCIALES",
+        "title": "Cómo añadir administrador en LinkedIn",
+        "keywords": [
+            "administrador linkedin", "añadir admin linkedin",
+            "gestionar linkedin", "página empresa linkedin admin",
+            "acceso linkedin", "dar acceso linkedin",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: WEB
+    # ═══════════════════════════════════════════
+    {
+        "id": "web_que_incluye",
+        "category": "WEB",
+        "title": "WEB - Qué incluye el Kit Digital Web",
+        "keywords": [
+            "qué incluye web", "kit digital web", "qué es kd web",
+            "presencia en internet", "sitio web kit digital",
+            "dominio hosting web", "páginas web kit digital",
+            "wordpress kit digital", "accesibilidad web",
+        ],
+    },
+    {
+        "id": "web_hosting_dominio",
+        "category": "WEB",
+        "title": "Web - Hosting y dominio: qué pasa al acabar la subvención",
+        "keywords": [
+            "hosting dominio subvención acaba", "qué pasa con el dominio",
+            "dominio después subvención", "hosting tras kit digital",
+            "renovar dominio", "dominio propiedad cliente",
+            "quién tiene el dominio", "hosting orbidi",
+        ],
+    },
+    {
+        "id": "web_dominio_compra",
+        "category": "WEB",
+        "title": "Web - Compra de dominio",
+        "keywords": [
+            "comprar dominio", "compra dominio", "nuevo dominio",
+            "registrar dominio", "cliente sin dominio", "falta dominio",
+            "nombre dominio", "dominio disponible",
+        ],
+    },
+    {
+        "id": "web_migracion_hosting",
+        "category": "WEB",
+        "title": "Web - Migración de hosting y dominio",
+        "keywords": [
+            "migrar hosting", "migración dominio", "crear web migrar",
+            "traspasar dominio", "cambiar hosting", "mover web",
+            "web en otro hosting", "migrar wordpress",
+        ],
+    },
+    {
+        "id": "web_presentacion_cliente",
+        "category": "WEB",
+        "title": "Web - Presentación de la web al cliente",
+        "keywords": [
+            "presentar web cliente", "presentación web",
+            "entregar web cliente", "revisión web cliente",
+            "guion presentación web", "llamada presentación web",
+        ],
+    },
+    {
+        "id": "web_wordpress",
+        "category": "WEB",
+        "title": "Web - WordPress y gestión del sitio",
+        "keywords": [
+            "wordpress", "gestión wordpress", "panel wordpress",
+            "editar wordpress", "acceso wordpress", "plugin wordpress",
+            "actualizar wordpress", "web wordpress",
+        ],
+    },
+    {
+        "id": "web_alistamiento",
+        "category": "WEB",
+        "title": "Web - Alistamiento (inicio del proyecto web)",
+        "keywords": [
+            "alistamiento web", "inicio proyecto web", "brief web",
+            "arrancar proyecto web", "primeros pasos web",
+            "datos necesarios web", "formulario web",
+        ],
+    },
+    {
+        "id": "web_bloqueos",
+        "category": "WEB",
+        "title": "Web - Bloqueos frecuentes en proyectos web",
+        "keywords": [
+            "bloqueo web", "proyecto web bloqueado", "web no avanza",
+            "bloqueo diseño web", "bloqueo dominio web",
+            "falta información web", "cliente no responde web",
+            "web no carga", "sitio web no funciona",
+        ],
+    },
+    {
+        "id": "web_modificaciones_diseño",
+        "category": "WEB",
+        "title": "Web - Modificaciones de diseño",
+        "keywords": [
+            "modificar diseño web", "cambio diseño", "cambiar diseño web",
+            "modificación web", "ajuste diseño", "cambiar colores web",
+            "cambiar logo web", "feedback diseño web",
+        ],
+    },
+    {
+        "id": "web_faqs",
+        "category": "WEB",
+        "title": "FAQs Web - Preguntas frecuentes de clientes",
+        "keywords": [
+            "faq web", "preguntas frecuentes web", "dudas web cliente",
+            "cuántas páginas", "qué incluye web", "web ecommerce",
+            "tienda online kit digital", "cuánto tarda la web",
+            "qué pasa si no me gusta la web",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: SEO
+    # ═══════════════════════════════════════════
+    {
+        "id": "seo_que_es",
+        "category": "SEO",
+        "title": "SEO - Qué es y por qué lo necesito",
+        "keywords": [
+            "qué es seo", "para qué sirve seo", "seo explicación",
+            "posicionamiento google", "aparecer en google",
+            "seo kit digital", "por qué seo",
+        ],
+    },
+    {
+        "id": "seo_tiempo_resultados",
+        "category": "SEO",
+        "title": "SEO - Cuánto tarda en verse resultados",
+        "keywords": [
+            "cuánto tarda seo", "tiempo resultados seo",
+            "cuándo veo resultados seo", "seo resultados",
+            "meses seo", "plazo seo",
+        ],
+    },
+    {
+        "id": "seo_que_incluye",
+        "category": "SEO",
+        "title": "SEO - Qué incluye y qué NO incluye el servicio",
+        "keywords": [
+            "qué incluye seo", "qué no incluye seo", "alcance seo",
+            "límites seo", "servicio seo kit digital",
+            "análisis web seo", "pestañas seo",
+        ],
+    },
+    {
+        "id": "seo_vs_google_ads",
+        "category": "SEO",
+        "title": "SEO vs Google Ads - Diferencias",
+        "keywords": [
+            "seo vs google ads", "seo vs sem", "diferencia seo ads",
+            "google ads seo mismo", "publicidad pagada seo",
+            "anuncios google seo",
+        ],
+    },
+    {
+        "id": "seo_necesito_aportar",
+        "category": "SEO",
+        "title": "SEO - Qué necesita aportar el cliente",
+        "keywords": [
+            "qué aporta cliente seo", "información para seo",
+            "datos necesarios seo", "accesos seo",
+            "colaboración cliente seo",
+        ],
+    },
+    {
+        "id": "seo_cliente_no_contento",
+        "category": "SEO",
+        "title": "SEO - Cliente no contento con los resultados",
+        "keywords": [
+            "cliente no contento seo", "no veo resultados seo",
+            "cliente insatisfecho seo", "seo no funciona",
+            "cliente queja seo", "malos resultados seo",
+            "no aparece en google",
+        ],
+    },
+    {
+        "id": "seo_herramientas",
+        "category": "SEO",
+        "title": "SEO - Herramientas que usamos",
+        "keywords": [
+            "herramientas seo", "qué herramientas seo",
+            "tools seo", "semrush", "ahrefs", "search console",
+            "plataformas seo",
+        ],
+    },
+    {
+        "id": "seo_palabras_clave",
+        "category": "SEO",
+        "title": "SEO - Palabras clave y posicionamiento",
+        "keywords": [
+            "palabras clave seo", "keywords seo", "cuántas keywords",
+            "posicionar palabras clave", "seo local vs general",
+            "seo local", "términos búsqueda seo",
+        ],
+    },
+    {
+        "id": "seo_alistamiento",
+        "category": "SEO",
+        "title": "SEO - Alistamiento (inicio del proyecto)",
+        "keywords": [
+            "alistamiento seo", "inicio proyecto seo", "brief seo",
+            "arrancar seo", "primeros pasos seo",
+            "datos necesarios seo proyecto",
+        ],
+    },
+    {
+        "id": "seo_bloqueos",
+        "category": "SEO",
+        "title": "SEO - Bloqueos en proyectos SEO",
+        "keywords": [
+            "bloqueo seo", "proyecto seo bloqueado", "seo sin web",
+            "web no apta seo", "seo no avanza",
+            "falta acceso search console", "falta acceso analytics",
+        ],
+    },
+    {
+        "id": "seo_faqs",
+        "category": "SEO",
+        "title": "FAQs SEO - Preguntas frecuentes de clientes",
+        "keywords": [
+            "faq seo", "preguntas frecuentes seo",
+            "garantía posición google", "primer puesto google",
+            "seo ecommerce", "seo todos los sectores",
+            "gestionar seo yo mismo",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: INTERCOM (detallado)
+    # ═══════════════════════════════════════════
+    {
+        "id": "intercom_abrir_conversacion",
+        "category": "INTERCOM",
+        "title": "Intercom - Abrir primera conversación con cliente",
+        "keywords": [
+            "abrir conversación intercom", "iniciar conversación",
+            "primera conversación cliente", "nuevo mensaje intercom",
+            "contactar cliente intercom", "enviar mensaje intercom",
+        ],
+    },
+    {
+        "id": "intercom_desde_hubspot",
+        "category": "INTERCOM",
+        "title": "Intercom - Abrir conversación desde HubSpot",
+        "keywords": [
+            "intercom desde hubspot", "conversación hubspot intercom",
+            "abrir intercom hubspot", "on-going hubspot",
+            "contactar cliente desde hubspot",
+        ],
+    },
+    {
+        "id": "intercom_buscar_cliente",
+        "category": "INTERCOM",
+        "title": "Intercom - Cómo buscar a un cliente",
+        "keywords": [
+            "buscar cliente intercom", "encontrar cliente intercom",
+            "buscar contacto intercom", "cómo busco intercom",
+        ],
+    },
+    {
+        "id": "intercom_tickets",
+        "category": "INTERCOM",
+        "title": "Intercom - Abrir tickets en Intercom",
+        "keywords": [
+            "ticket intercom", "abrir ticket intercom",
+            "crear ticket desde intercom", "ticket en conversación",
+        ],
+    },
+    {
+        "id": "intercom_inbox",
+        "category": "INTERCOM",
+        "title": "Intercom - Cómo funciona el Inbox",
+        "keywords": [
+            "inbox intercom", "bandeja entrada intercom",
+            "cómo funciona inbox", "gestión inbox",
+            "organizar inbox intercom",
+        ],
+    },
+    {
+        "id": "intercom_plantillas_macros",
+        "category": "INTERCOM",
+        "title": "Intercom - Plantillas y Macros",
+        "keywords": [
+            "plantillas intercom", "macros intercom",
+            "respuestas guardadas", "plantilla mensaje intercom",
+            "cómo usar plantillas intercom", "respuesta rápida intercom",
+        ],
+    },
+    {
+        "id": "intercom_whatsapp",
+        "category": "INTERCOM",
+        "title": "Intercom - Reglas de uso de WhatsApp",
+        "keywords": [
+            "whatsapp intercom", "reglas whatsapp", "usar whatsapp intercom",
+            "cuando usar whatsapp", "normas whatsapp intercom",
+        ],
+    },
+    {
+        "id": "intercom_asignacion_tiempos",
+        "category": "INTERCOM",
+        "title": "Intercom - Asignación y tiempos de respuesta",
+        "keywords": [
+            "asignar conversación intercom", "tiempo respuesta intercom",
+            "sla intercom", "asignación intercom",
+            "cuánto tiempo responder intercom",
+        ],
+    },
+    {
+        "id": "intercom_reasignacion",
+        "category": "INTERCOM",
+        "title": "Intercom - Reasignación de conversaciones",
+        "keywords": [
+            "reasignar intercom", "reasignación conversación",
+            "cambiar asignación intercom", "pasar conversación intercom",
+            "transferir conversación intercom",
+        ],
+    },
+    {
+        "id": "intercom_merge",
+        "category": "INTERCOM",
+        "title": "Intercom - Fusionar conversaciones (merge)",
+        "keywords": [
+            "merge intercom", "fusionar conversaciones",
+            "unir conversaciones intercom", "combinar mensajes intercom",
+        ],
+    },
+    {
+        "id": "intercom_vistas",
+        "category": "INTERCOM",
+        "title": "Intercom - Vistas personalizadas",
+        "keywords": [
+            "vistas intercom", "vistas personalizadas intercom",
+            "crear vista intercom", "filtros intercom",
+            "organizar conversaciones intercom",
+        ],
+    },
+    {
+        "id": "intercom_snooze",
+        "category": "INTERCOM",
+        "title": "Intercom - Snooze y buenas prácticas bandeja Open",
+        "keywords": [
+            "snooze intercom", "posponer conversación",
+            "bandeja open intercom", "buenas prácticas intercom",
+            "cuándo usar snooze", "gestión bandeja",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: HUBSPOT (detallado)
+    # ═══════════════════════════════════════════
+    {
+        "id": "hubspot_que_es",
+        "category": "HUBSPOT",
+        "title": "Qué es HubSpot y ventajas para CS",
+        "keywords": [
+            "qué es hubspot", "para qué sirve hubspot",
+            "hubspot crm", "ventajas hubspot", "cómo funciona hubspot",
+        ],
+    },
+    {
+        "id": "hubspot_objeto_empresa",
+        "category": "HUBSPOT",
+        "title": "HubSpot - Objeto Empresa (dónde está la info del cliente)",
+        "keywords": [
+            "objeto empresa hubspot", "empresa hubspot",
+            "dónde veo info cliente hubspot", "ficha cliente hubspot",
+            "datos empresa hubspot", "campos empresa hubspot",
+            "comprobante igic hubspot",
+        ],
+    },
+    {
+        "id": "hubspot_tickets_categorias",
+        "category": "HUBSPOT",
+        "title": "HubSpot - Categorías de tickets y cuándo usarlos",
+        "keywords": [
+            "categorías ticket hubspot", "tipo ticket hubspot",
+            "qué categoría ticket", "cuándo abro ticket",
+            "categoría correcta ticket", "ticket prioridad",
+            "ticket incidencia", "ticket cambio memoria",
+            "ticket reclamación",
+        ],
+    },
+    {
+        "id": "hubspot_ticket_po",
+        "category": "HUBSPOT",
+        "title": "HubSpot - Cómo abrir ticket a PO (Product Owner)",
+        "keywords": [
+            "ticket po", "ticket product owner", "escalar po",
+            "abrir ticket po hubspot", "cuándo escalar po",
+        ],
+    },
+    {
+        "id": "hubspot_project_pipeline",
+        "category": "HUBSPOT",
+        "title": "HubSpot - Project Pipeline Stage (estados del proyecto)",
+        "keywords": [
+            "project pipeline", "estado proyecto hubspot",
+            "pipeline stage hubspot", "estado project",
+            "cambiar estado proyecto hubspot",
+        ],
+    },
+    {
+        "id": "hubspot_referidos_proceso",
+        "category": "HUBSPOT",
+        "title": "HubSpot - Proceso completo de referidos",
+        "keywords": [
+            "proceso referidos hubspot", "crear referido hubspot",
+            "pasos referido", "marcar referido hubspot",
+            "cómo añadir referido hubspot",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: BLOQUEOS (transversal)
+    # ═══════════════════════════════════════════
+    {
+        "id": "bloqueos_tipos",
+        "category": "BLOQUEOS",
+        "title": "Tipos de bloqueos en proyectos CS",
+        "keywords": [
+            "tipos bloqueo", "qué es un bloqueo", "proyecto bloqueado",
+            "bloqueo qué hacer", "tag bloqueo", "motivo bloqueo",
+            "bloqueo cliente", "bloqueo interno",
+        ],
+    },
+    {
+        "id": "bloqueos_formulario_cliente",
+        "category": "BLOQUEOS",
+        "title": "Bloqueos - Comunicación con cliente",
+        "keywords": [
+            "formulario bloqueo cliente", "comunicar bloqueo",
+            "decirle al cliente que está bloqueado",
+            "plantilla bloqueo cliente", "mensaje bloqueo",
+        ],
+    },
+    {
+        "id": "bloqueos_memoria",
+        "category": "BLOQUEOS",
+        "title": "Bloqueos en creación de Memoria 1 y 2",
+        "keywords": [
+            "bloqueo memoria", "memoria bloqueada", "error memoria",
+            "bloqueo creación memoria", "bloqueo presentación memoria",
+            "web caída memoria", "sitio no carga memoria",
+        ],
+    },
+    {
+        "id": "bloqueos_tipologias_prd",
+        "category": "BLOQUEOS",
+        "title": "Tipologías de bloqueos CS ↔ PRD",
+        "keywords": [
+            "tipologías bloqueos", "bloqueos producción",
+            "bloqueo prd", "guia bloqueos prd",
+            "bloqueo web prd", "bloqueo seo prd", "bloqueo rrss prd",
+            "tabla bloqueos", "causa bloqueo acción",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: TRAMITACIÓN (ampliado)
+    # ═══════════════════════════════════════════
+    {
+        "id": "tramitacion_seo",
+        "category": "TRAMITACIÓN",
+        "title": "Tramitación SEO - Requisitos para la memoria",
+        "keywords": [
+            "tramitación seo", "memoria seo", "requisitos memoria seo",
+            "evidencias seo", "justificación seo",
+            "automáticamente genera seo",
+        ],
+    },
+    {
+        "id": "tramitacion_web",
+        "category": "TRAMITACIÓN",
+        "title": "Tramitación WEB/ECOM - Requisitos para la memoria",
+        "keywords": [
+            "tramitación web", "memoria web", "requisitos memoria web",
+            "evidencias web", "justificación web ecom",
+            "condiciones memoria web",
+        ],
+    },
+    {
+        "id": "tramitacion_rrss",
+        "category": "TRAMITACIÓN",
+        "title": "Tramitación RRSS - Requisitos para la memoria",
+        "keywords": [
+            "tramitación rrss", "memoria rrss", "requisitos memoria redes",
+            "evidencias redes sociales", "justificación rrss",
+            "condiciones memoria redes",
+        ],
+    },
+    {
+        "id": "tramitacion_pc",
+        "category": "TRAMITACIÓN",
+        "title": "Tramitación PC - Requisitos para la memoria",
+        "keywords": [
+            "tramitación pc", "memoria pc", "requisitos memoria pc",
+            "evidencias pc ordenador", "justificación pc",
+            "condiciones memoria ordenador",
+        ],
+    },
+    {
+        "id": "estados_memoria_hubspot_clickup",
+        "category": "TRAMITACIÓN",
+        "title": "Estados de Memoria en ClickUp ↔ HubSpot",
+        "keywords": [
+            "estados memoria clickup hubspot", "sincronización memoria",
+            "estado memoria en qué sistema", "clickup hubspot memoria",
+            "memoria estado sincronizado",
+        ],
+    },
+    {
+        "id": "errores_firma_memoria",
+        "category": "TRAMITACIÓN",
+        "title": "Errores frecuentes en firmas de memorias",
+        "keywords": [
+            "error firma memoria", "cliente no puede firmar memoria",
+            "problema firma memoria", "dominio incorrecto memoria",
+            "red social incorrecta memoria", "error en mi memoria",
+        ],
+    },
+
+    # ═══════════════════════════════════════════
+    # CATEGORÍA: AUTOMATIZACIONES
+    # ═══════════════════════════════════════════
+    {
+        "id": "automatizacion_intercom_web",
+        "category": "AUTOMATIZACIONES",
+        "title": "Automatización en Intercom para proyectos web",
+        "keywords": [
+            "automatización intercom", "automatización web intercom",
+            "qué hace la automatización", "activar automatización",
+            "bot intercom web",
+        ],
+    },
+    {
+        "id": "automatizacion_proyecto_producido",
+        "category": "AUTOMATIZACIONES",
+        "title": "Automatización: Proyecto producido WEB-RRSS-SEO",
+        "keywords": [
+            "automatización proyecto producido", "proyecto listo automatización",
+            "automatizar entrega", "web producida automatización",
+            "seo producido automatización",
         ],
     },
 ]
