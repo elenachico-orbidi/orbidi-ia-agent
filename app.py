@@ -1,6 +1,7 @@
 """
 Asistente IA de Customer Success - Orbidi
 Conectado directamente a Notion (API) para respuestas siempre actualizadas.
+RAG con 102 procedimientos definidos y organizados por categoría.
 """
 import os
 import re
@@ -9,6 +10,7 @@ import unicodedata
 import streamlit as st
 from groq import Groq
 from rank_bm25 import BM25Okapi
+from procedures_config import PROCEDURES_CONFIG
 
 # ─────────────────────────────────────────────
 # PÁGINAS NOTION A INDEXAR
@@ -338,10 +340,35 @@ def load_knowledge_base():
 
     procedures = _deduplicate(procedures)
 
+    # Enriquecer con keywords y categorías de procedures_config
+    config_by_title = {c['title'].lower(): c for c in PROCEDURES_CONFIG}
     for p in procedures:
         p['text'] = f"## {p['title']}\n{p['content']}"
+        title_lower = p['title'].lower()
+        cfg = config_by_title.get(title_lower)
+        if not cfg:
+            # Match parcial si no hay match exacto
+            for cfg_title, cfg_data in config_by_title.items():
+                if cfg_title in title_lower or title_lower in cfg_title:
+                    cfg = cfg_data
+                    break
+        if cfg:
+            p['category'] = cfg.get('category', p.get('source', ''))
+            p['keywords'] = cfg.get('keywords', [])
+        else:
+            p['category'] = p.get('source', '')
+            p['keywords'] = []
 
-    tokenized = [_normalize(f"{p['title']} {p['content']}") for p in procedures]
+    # BM25: título + keywords definidos + categoría + contenido
+    tokenized = [
+        _normalize(
+            f"{p['title']} "
+            f"{' '.join(p.get('keywords', []))} "
+            f"{p.get('category', '')} "
+            f"{p['content']}"
+        )
+        for p in procedures
+    ]
     valid = [(p, t) for p, t in zip(procedures, tokenized) if t]
     if not valid:
         return None
@@ -605,6 +632,7 @@ if prompt := st.chat_input("Escribe tu pregunta sobre procesos CS…"):
     if retrieved:
         with st.expander(f"📚 Procedimientos consultados ({len(retrieved)})", expanded=False):
             for r in retrieved:
-                st.markdown(f"- **{r['title']}** — _{r.get('source', '')}_")
+                cat = r.get('category', r.get('source', ''))
+                st.markdown(f"- **{r['title']}** — `{cat}`")
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
